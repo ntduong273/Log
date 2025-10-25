@@ -119,4 +119,34 @@ Security-enabled Universal Group:
 
 -----------------------------------------------------------------------------------------------------------------------------
 
-## Event đăng nhập tài khoản 
+## Event logon tài khoản (Giao thức xác thực Kerberos)
+
+
+- Nằm ở **<code>Security event log</code>**, thiết lập thông qua Group Policy.
+- Logon = an account gain access to a resource.
+- Domain accounts được xác thực bởi domain controller trong một mạng Windows.
+- Local accounts được xác thực bởi hệ thống cục bộ nơi chúng tồn tại.<br><br><br>
+
+| Event ID | Description |
+|----------|-------------|
+| 4768 | Cấp phát thành công một TGT (Ticket Granting Ticket) -> 1 user account đã được xác thực bởi DC. Phần Network Information trong mô tả sự kiện chứa thông tin bổ sung về máy chủ từ xa trong trường hợp có nỗ lực đăng nhập từ xa. Trường Keywords chỉ ra liệu nỗ lực xác thực có thành công hay thất bại. |
+
+**Result code:**
+- 6 (0x6): Username không có hiệu lực.
+- 12 (0xC): Chính sách hạn chế (Policy restriction) cấm đăng nhập (hạn chế về tên máy, time đăng nhập trong ngày).
+- 18 (0x12): Account bị khóa, vô hiệu hóa, hết hạn.
+- 23 (0x17): Password của account hết hạn.
+- 24 (0x18): Password sai.
+- 32 (0x20): Ticket hết hạn (common on computer accounts).
+- 37 (0x25): Độ lệch time của đồng hồ quá lớn.
+
+
+
+| Event ID | Description |
+|----------|-------------|
+| 4769 | A service ticket được request by 1 user account cho 1 resource cụ thể (gồm source IP máy req, user account, service to be accessed)| 
+| 4770 | A service ticket được renew (account name, service name, client IP address, encrypt type) |
+| 4771 | Tùy lí do logon Kerberos failed, mà tạo ra event 4768 hay 4771 (result code: in4 failed) |
+| 4776 | Các xác thực NTLM. 
+- Nhiều event 4776 thất bại, error code: C000006A(mật khẩu không hợp lệ) + C0000234 (tài khoản bị khóa) -> dấu hiệu attack đoán mật khẩu thất bại (or đơn giản 1 user quên password).
+- Nhiều event 4776 thất bại, theo sau là event 4776 thành công -> attack đoán mật khẩu thành công. |
