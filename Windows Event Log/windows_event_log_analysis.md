@@ -26,7 +26,7 @@
 
 
 
- ## Event quản lí tài khoản (Dải 4720 -> 4799)
+ ## 1. Event quản lí tài khoản (Dải 4720 -> 4799)
 
 - Ghi các event khi một account được created/modified.
 - Ở local system nếu là local account, ở domain controller nếu là domain account.<br><br>
@@ -119,7 +119,7 @@ Security-enabled Universal Group:
 
 -----------------------------------------------------------------------------------------------------------------------------
 
-## Event logon tài khoản (Giao thức xác thực Kerberos)
+## 2. Event logon tài khoản (Giao thức xác thực Kerberos)
 
 
 - Nằm ở **<code>Security event log</code>**, thiết lập thông qua Group Policy.
@@ -129,7 +129,9 @@ Security-enabled Universal Group:
 
 | Event ID | Description |
 |----------|-------------|
-| 4768 | Cấp phát thành công một TGT (Ticket Granting Ticket) -> 1 user account đã được xác thực bởi DC. Phần Network Information trong mô tả sự kiện chứa thông tin bổ sung về máy chủ từ xa trong trường hợp có nỗ lực đăng nhập từ xa. Trường Keywords chỉ ra liệu nỗ lực xác thực có thành công hay thất bại. |
+| 4768 | Cấp phát thành công một TGT (Ticket Granting Ticket) | 
+<br>
+=> 1 user account đã được xác thực bởi DC. Phần Network Information trong mô tả sự kiện chứa thông tin bổ sung về máy chủ từ xa trong trường hợp có nỗ lực đăng nhập từ xa. Trường Keywords chỉ ra liệu nỗ lực xác thực có thành công hay thất bại. 
 
 **Result code:**
 - 6 (0x6): Username không có hiệu lực.
@@ -150,3 +152,56 @@ Security-enabled Universal Group:
 | 4776 | Các xác thực NTLM. 
 - Nhiều event 4776 thất bại, error code: C000006A(mật khẩu không hợp lệ) + C0000234 (tài khoản bị khóa) -> dấu hiệu attack đoán mật khẩu thất bại (or đơn giản 1 user quên password).
 - Nhiều event 4776 thất bại, theo sau là event 4776 thành công -> attack đoán mật khẩu thành công. |
+
+
+
+
+Trên các hệ thống đã được truy cập, một số Event IDs cần chú ý:
+
+
+| Event ID | Description |
+|----------|-------------|
+| 4624 | Một lần logon đã diễn ra. |
+
+***Phân tích:*** 
+- Type 2: đăng nhập Interactive (đăng nhập cục bộ).
+- Type 3: đăng nhập từ xa hoặc Network.<br>
+(*Event description field chứa thông tin liên quan, tập trung vào Network Information để lấy thông tin về máy chủ từ xa.<br>=> so sánh (correlation) với các event:4768, 4769,4776 có thể cung cấp thêm chi tiết về máy chủ từ xa. <br>Nếu tên máy chủ và địa chỉ IP được gán khác nhau, có thể là dấu hiệu của tấn công SMB relay, khi 1 attacker chuyển tiếp 1 req từ một hệ thống sử dụng địa chỉ IP không liên quan đến hệ thống đó.*)
+(*Trường Caller Process Name, Caller Process ID trong Process Information cung cấp thêm chi tiết về tiến trình khởi tạo đăng nhập.<br>Các kết nối thành công qua RDP thường được ghi lại với Logon Type 10 trong Event ID 4624.<br>Các đăng nhập RDP thất bại thường dẫn đến Logon Type 3.*)
+- Type 4: Batch (hàng loạt, scheduled task)
+- Type 5: Service (Service Control Manager tạo 1 service)
+- Type 7: Unlock 
+- Type 8: NetworkCleartext
+- Type 9: NewCredentials
+- Type 10: RemoteInteractive
+- Type 11: CachedInteractive
+
+
+
+| Event ID | Description |
+|----------|-------------|
+| 4625 | Một lần logon đã thất bại. |
+
+***Phân tích:*** Có nhiều event này trên toàn mạng -> có thể là dấu hiệu tấn công đoán mật khẩu/password spraying. Network Information trong Event Description cung cấp thông tin giá trị về máy chủ từ xa đang cố gắng đăng nhập. Lý do thất bại có trong Failure Information trong Event Description.
+
+VD status code:
+
+0xC000006A: User logon with misspelled or bad password.
+
+
+
+| Event ID | Description |
+|----------|-------------|
+| 4634/4647 | User logoff. |
+| 4648 | A logon cố dùng explicit credentials |
+| 4672 | Khi một số đặc quyền liên quan đến quyền truy cập nâng cao (elevated) hoặc quyền quản trị viên được cấp cho một lần đăng nhập. |
+| 4778 | Khi a session is reconnected to a Windows station |
+| 4779 | Khi a session is disconnected |
+
+
+
+*Thông tin thêm về RDP Sessions ở file log:* %SystemRoot%\System32\winevt\Logs\Microsoft-Windows-TerminalServicesLocalSessionManager%4Operational
+
+Event ID 21 chỉ ra session logon events, both local and remote, including the IP from which the connection was made if remote. 
+
+Event ID 24 chỉ ra session disconnection, including the IP from which the connection was made if remote
