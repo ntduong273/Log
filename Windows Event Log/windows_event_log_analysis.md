@@ -295,4 +295,137 @@ Khi thay đổi audit policy dù là độc hại do attacker hay hợp pháp do
 
 -----------------------------------------------------------------------------------------------------------------------------
 
-## 7. 
+## 7. Auditing Windows  Service
+
+Nhiều cuộc attack phụ thuộc vào Windows service nhờ vào execute command remotely hoặc maintain persistence trên system. Trong khi hầu hết các event mà chúng ta đề cập cho tới nay thì mới chỉ được tìm thấy trong Security Event Log, Windows cũng đã ghi nhận các log có liên quan để bắt đầu và dừng dịch vụ trên System Event Log.
+
+| Event ID | Description |
+|----------|-------------|
+| 6005 | Event log service được bắt đầu. Xảy ra ở giai đoạn system boot & whenever sys khởi động thủ công. Bởi vì event log service quan trọng cho security nên nó có Event ID riêng. |
+| 6006 | Event log service bị dừng lại. Xảy ra khi tắt hoặc khởi động lại sys, còn nếu ở các time khác thì cũng đáng ngờ. |
+| 7034 | Một dịch vụ chấm dứt đột ngột. Event description hiển thị tên các dịch vụ, số lần service crashed. |
+| 7036 | Một dịch vụ đã bị dừng hoặc bắt đầu. Event description cung cấp tên service, nhưng không chi tiết user account nào requested dừng service, chỉ ra service nhập vào running state khi nó được start/enter the stopped state khi nó bị dừng.  | 
+| 7040 | Một loại khởi động cho một 1 dịch vụ đã thay đổi. Event description hiển thị tên service đã được thay đổi, mô tả thay đổi. |
+| 7045 | Một dịch vụ đã được cài đặt bởi hệ thống. Tên service, full path tới exe,… Khá quan trọng, vì nhiều tools tạo 1 service trên remote sys để exe command, or tạo service có tên ngẫu nhiên (bất thường), chạy tệp từ các folder khác,…Trùng hợp thằng Windows Defender cũng hay có cái kiểu đặt tên random -> cần check kĩ để phát hiện dấu hiệu độc hại |
+
+<br>
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+## 8. Wireless LAN Auditing
+
+Windows duy trì 1 event log dành riêng cho các LAN activities, và với các điểm truy cập giả mạo là kiểu tấn công mã độc/mitm thì nên check các kết nối bất thường trên các thiết bị có khả năng dùng Wifi, cụ thể là những cái cho phép rời khỏi environment của mình. 
+
+Log này được đặt ở %SystemRoot%\System32\winevt\Logs\Microsoft-Windows-WLAN-AutoConfig%4Operational.evtx.
+
+| Event ID | Description |
+|----------|-------------|
+| 8001 |  WLAN service success connect to 1 wireless network. Event description chứa connection mode:automatic connect dựa vào configured pro5 hay thủ công, SSID của access point, cơ chế xác thực, cơ chế mã hóa |
+| 8002 | WLAN service failed to connect to a wireless network. Tương tự như 8001, nhưng có failure reason field. |
+
+<br>
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+## 9. Process Tracking
+
+Cmd.exe không lưu history command run by users -> khó cho incident handlers để điều tra hành động của attacker trên 1 máy bị xâm phạm. 
+Các hệ thống Windows sau này đã cải thiện, log full command lines trong các event create process để loại bỏ sự mù quáng khỏi incident handlers, cung cấp dấu vết để tìm ra attacker.
+ Cần bật 2 thành phần:
+Computer Configuration -> Windows Settings -> Security Settings -> Local Policies -> Audit Policy -> Audit process tracking.
+Computer Configuration -> Administrative Templates -> System -> Audit Process Creation -> Include command line in process creation events.
+
+| Event ID | Description |
+|----------|-------------|
+| 4688 | A new process created. ED có Process ID, Process name, creator process ID, creator process name, process command line. Creator Subject liệt kê các user context mà Creator Process đã đang chạy. Target Subject liệt kê user context mà các tiến trình mới tạo đang chạy. |
+
+
+<br><br>
+
+Windows Filtering Platform events IDs:
+| Event ID | Description |
+|----------|-------------|
+| 5031 | Windows Firewall Service đã blocked 1 app khỏi việc chấp nhận các connect incoming trong mạng |
+| 5152 | WFP đã chặn 1 gói tin |
+| 5154 | WFP đã cho phép 1 app/service nghe trên 1 cổng cho các connect đến. |
+| 5156 | WFP đã cho phép 1 kết nôi |
+| 5157 | WFP đã chặn 1 kết nối |
+| 5158 | WFP đã cho phép liên kết tới 1 local port. |
+| 5159 | WFP đã chặn 1 liên kết tới 1 local port. |
+
+<br>
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+## 10. Additional Program Execution logging
+
+AppLocker: tạo log sự kiện tại C:\Windows\System32\winevt\Logs cho các tệp thực thi, DLL, MSI, script và ứng dụng đóng gói, tùy chế độ (audit-only or blocking).
+Windows Defender: ghi log tại C:\Windows\System32\winevt\Logs\Microsoft-Windows-Windows Defender%4Operational.evtx và %4WHC.evtx, theo dõi malware và script đáng ngờ qua AMSI.
+
+Windows Defender suspicious events IDs:
+
+| Event ID | Description |
+|----------|-------------|
+| 1006 | Antimalware engine tìm được malware/phần mềm độc hại không mong muốn khác |
+| 1007 | Antimalware platform tạo 1 hành động để protect ur sys khỏi malware/phần mềm độc hại |
+|1008 | AP cố tạo 1 hành động để bảo vệ ur sys khỏi malware/pm độc hại khác nhưng failed |
+| 1013 | AP xóa history của malware |
+| 1015 | AP phát hiện hành vi đáng ngờ |
+| 1116 | AP phát hiện malware |
+| 1117 | Antimalware platform tạo 1 hành động để protect ur sys khỏi malware/phần mềm độc hại |
+| 1118 | AP cố tạo 1 hành động để bảo vệ ur sys khỏi malware/pm độc hại khác nhưng failed |
+| 1119 | AP gặp 1 lỗi nghiêm trọng khi cố hành động với malware/pm khả nghi |
+| 5001 | Bảo vệ real-time bị vô hiệu hóa |
+| 5004 | Cấu hình bảo vệ real-time bị thay đổi |
+| 5007 | Cấu hình antimalware platform bị thay đổi |
+| 5010 | Scan malware/pm khả khi khác bị vô hiệu hóa |
+| 5012 | Scan virus bị vô hiệu hóa |
+
+
+Windows exploit protection cung cấp khả năng phòng thủ, bảo vệ OS, app cá nhân khỏi common attack vectors. Khi bật, các tính năng này ghi lại hoạt động của mình trong các tệp log C:\Windows\System32\winevt\Logs\Microsoft-Windows-SecurityMitigations%4KernelMode.evtx và Microsoft-Windows-Security-Mitigations%4UserMode.evtx.
+
+Có thể sử dụng Sysmon – 1 tiện ích free của Sysinternals, cài dưới dạng dịch vụ hệ thống và trình điều khiển -> tạo các event logs tiến trình, kết nối mạng, thay đổi thời gian tạo tệp,… Nó tạo ra một danh mục log mới, được hiển thị trong Event Viewer dưới mục Applications and Services Logs\Microsoft\Windows\Sysmon\Operational và được lưu trữ tại C:\Windows\System32\winevt\Logs\Microsoft-Windows-Sysmon%4Operational.evtx.
+
+| Event ID | Description |
+|----------|-------------|
+| 1 | Process creation: process ID, path to exe, hash exe, command line use,… |
+| 2 | A process changed a file creation time. |
+| 3 | Network connection |
+| 4 | Sysmon service state changed. |
+| 5 | Process terminated |
+| 6 | Driver loaded |
+| … | …… |
+| 255 | Sysmon error |
+
+
+<br>
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+## 11. Auditing Powershell use
+
+Bật thông qua Group Policy, ở Computer Configuration -> Policies -> Administrative Templates -> Windows Components -> Windows PowerShell.
+
+Có 3 loại log, phụ thuộc ver Windows:
+-	Module Logging: log các event execution theo pipeline, event log.
+-	Script Block Logging: capture các command giải rối gửi tới powershell, capture chỉ command, không có result output, log tới event log.
+-	Transciption: capture input/output powershell, text files trong user specified location.
+Powershell event log có 2 nơi lưu chính:
+
+
+%SystemRoot%\System32\winevt\ Logs\Microsoft-Windows-PowerShell%4Operational.evtx
+
+| Event ID | Description |
+|----------|-------------|
+| 4103 | show cái pipeline exe từ module logging facility, gồm các user context được used to run command.  |
+| 4104 | show script block logging entries. Captures các commands đã gửi tới powershell, nhưng không có output |
+
+
+
+%SystemRoot%\System32\winevt\Logs\Windows PowerShell.evtx
+
+| Event ID | Description |
+|----------|-------------|
+| 400 | chỉ ra việc bắt đầu execution command hoặc session. |
+| 800 | shows chi tiết pipeline execution. Trường hostname sẽ chỉ ra nếu Console or remote session. |
+
