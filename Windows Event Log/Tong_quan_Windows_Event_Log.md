@@ -138,7 +138,7 @@
 
 
 
-----------------------------------------------------------------------------------
+----------------------------------------------------------------------------
 
 ## 6. Thay đổi cấu hình hệ thống quan trọng
 
@@ -152,3 +152,122 @@
 
 | **Event ID(s)** | **Description** |
 |-----------------|-----------------|
+| 4697 | A service was installed in the system. *(Phiên bản Security Log của 7045 - Yêu cầu Audit Policy)* |
+| 4698 | A scheduled task was created. *(Dấu hiệu Persistence - Yêu cầu Audit Policy)* |
+| 4702 | A scheduled task was updated. |
+| 4896 | A scheduled task was deleted. |
+| 4946 | A rule has been added to the Windows Firewall exception list. *(Hoặc thay đổi rule).* |
+| 4947 | A rule has been deleted from the Windows Firewall exception list. |
+
+
+**Description:** Ghi lại các sự kiện liên quan đến trạng thái dịch vụ, cài đặt dịch vụ mới, tạo/thay đổi tác vụ theo lịch, và thay đổi cấu hình tường lửa Windows.
+
+**Ý nghĩa cho SOC:**
+- *Phát hiện kỹ thuật Persistence:* Attacker thường cài đặt dịch vụ hoặc tạo tác vụ theo lịch để đảm bảo mã độc chạy lại sau khi hệ thống khởi động lại.
+- *Phát hiện thay đổi cấu hình phòng thủ:* Thay đổi tường lửa có thể cho phép attacker giao tiếp ra bên ngoài hoặc di chuyển ngang trong mạng.
+- *Giám sát hoạt động bất thường:* Dịch vụ quan trọng bị dừng hoặc khởi động lại bất thường, hệ thống tự động tắt/khởi động lại không theo kế hoạch.
+
+**Tác động tiềm tàng:**
+- Persistence.
+- Làm suy yếu các biện pháp phòng thủ (tường lửa).
+- Gây gián đoạn dịch vụ (DoS) thông qua tắt dịch vụ quan trọng.
+
+
+
+----------------------------------------------------------------------------
+
+## 7. Truy cập đối tượng (Object Access: File, Registry,...)
+
+**Log Source:** Security.
+
+| **Event ID(s)** | **Description** |
+|-----------------|-----------------|
+| 4656 | A handle to an object was requested. *(Khi một đối tượng được truy cập)* |
+| 4663 | An attempt was made to access an object. *(Khi quyền truy cập cụ thể (đọc, ghi, xóa) được sử dụng - RẤT QUAN TRỌNG - Yêu cầu cấu hình SACLs trên các file/registry key cụ thể và Audit Policy)* |
+
+**Description:** Ghi lại các nỗ lực truy cập (đọc, ghi, xóa) vào các đối tượng hệ thống như file, thư mục, registry key, máy in, v.v.
+
+**Ý nghĩa cho SOC:**
+- *Phát hiện truy cập dữ liệu nhạy cảm trái phép:* Theo dõi ai đang cố gắng đọc, ghi hoặc xóa các file/thư mục chứa dữ liệu quan trọng.
+- *Phát hiện thay đổi Registry độc hại:* Giám sát các thay đổi đối với các Registry key liên quan đến Persistence (Run keys), thay đổi cấu hình bảo mật, hoặc các cài đặt hệ thống quan trọng khác.
+- *Truy vết hoạt động sau khi xâm nhập:* Xác định những file/registry key nào đã bị truy cập hoặc sửa đổi bởi kẻ tấn công.
+
+**Tác động tiềm tàng:**
+- Data Exfiltration.
+- Phá hoại dữ liệu (Tampering).
+- Persistence hoặc thay đổi cấu hình độc hại thông qua Registry.
+
+
+
+----------------------------------------------------------------------------
+
+## 8. Hoạt động của các thiết bị bên ngoài (External Device Usage)
+
+**Log Source:** Security.
+
+| **Event ID(s)** | **Description** |
+|-----------------|-----------------|
+| 4660 | An object was deleted. *(Có thể liên quan đến việc ngắt kết nối thiết bị USB sau khi dữ liệu bị sao chép - Yêu cầu cấu hình Audit Policy)* |
+
+*(Các Event ID khác tùy thuộc vào cấu hình cụ thể cho việc cắm/tháo thiết bị USB)*
+
+**Description:** Ghi lại các sự kiện liên quan đến việc kết nối và ngắt kết nối các thiết bị lưu trữ di động (USB drive).
+
+**Ý nghĩa cho SOC:**
+- *Phát hiện đánh cắp dữ liệu (Data Exfiltration):* Theo dõi việc cắm USB drive vào các máy chủ hoặc máy trạm nhạy cảm có thể là dấu hiệu của việc sao chép dữ liệu trái phép.
+- *Phát hiện lây nhiễm mã độc qua USB:* Theo dõi việc cắm các thiết bị không được phê duyệt.
+
+**Tác động tiềm tàng:**
+- Đánh cắp dữ liệu.
+- Lây nhiễm mã độc vào mạng nội bộ.
+
+
+
+----------------------------------------------------------------------------
+
+## 9. Các lỗi và cảnh báo hệ thống quan trọng
+
+**Log source:** System.
+
+**Event ID(s):** *(Các Event ID này rất đa dạng tùy thuộc vào nguyên nhân)*
+- Bugcheck events: Các Event ID liên quan đến Blue Screen of Death (BSOD).
+- Disk/Hardware errors: Các cảnh báo hoặc lỗi liên quan đến ổ cứng, bộ nhớ RAM, nguồn điện, v.v.
+- Service Control Manager Errors: Lỗi khi khởi động hoặc chạy dịch vụ quan trọng.
+
+**Description:** Ghi lại các lỗi nghiêm trọng, cảnh báo hoặc sự cố phần cứng/phần mềm gây ảnh hưởng đến hoạt động của hệ thống.
+
+**Ý nghĩa cho SOC:**
+- *Phát hiện sự cố ổn định hệ thống:* Các lỗi phần cứng/phần mềm liên tục có thể chỉ ra vấn đề cần khắc phục hoặc là kết quả của một cuộc tấn công *(vd: tấn công DoS).*
+- *Manh mối về hoạt động độc hại:* Một số mã độc hoặc kỹ thuật tấn công có thể gây ra lỗi hệ thống hoặc làm sập dịch vụ.
+
+**Tác động tiềm tàng:**
+- Gián đoạn dịch vụ (DoS).
+- Mất dữ liệu (trong trường hợp lỗi đĩa).
+- Hệ thống không khả dụng.
+
+
+
+----------------------------------------------------------------------------
+
+## 10. Lỗi ứng dụng (Application Errors)
+
+**Log source:** Application.
+
+**Event ID(s):** *(Rất đa dạng, phụ thuộc vào ứng dụng)*
+
+| **Event ID(s)** | **Description** |
+|-----------------|-----------------|
+| 1000 | Application Error *(Lỗi ứng dụng chung, thường là ứng dụng bị crash)* |
+
+*Các Event ID khác từ các ứng dụng cụ thể: VD: Lỗi từ cơ sở dữ liệu, web server (IIS), phần mềm diệt virus, v.v.*
+
+**Description:** Ghi lại các lỗi xảy ra trong quá trình hoạt động của các ứng dụng.
+
+**Ý nghĩa cho SOC:**
+- *Phát hiện tấn công khai thác lỗ hổng:* Một số cuộc tấn công (ví dụ: Buffer Overflow) có thể gây ra lỗi ứng dụng crash.
+- *Theo dõi hoạt động của phần mềm bảo mật:* Log từ phần mềm diệt virus hoặc EDR (Endpoint Detection and Response) thường nằm trong Application Log và cung cấp cảnh báo quan trọng về việc phát hiện/chặn mã độc.
+- *Phát hiện các vấn đề cấu hình/tương thích:* Giúp chẩn đoán các vấn đề gây ra lỗi ứng dụng có thể làm gián đoạn hoạt động kinh doanh.
+
+**Tác động tiềm tàng:**
+- Gián đoạn dịch vụ ứng dụng.
+- Có thể là dấu hiệu của nỗ lực khai thác lỗ hổng.
