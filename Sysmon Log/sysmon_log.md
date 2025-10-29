@@ -7,6 +7,18 @@ Sysmon là một công cụ trong bộ công cụ Sysinternal của do Microsoft
 
 ## Event ID 1: ProcessCreate
 
+Cung cấp thông tin về các tiến trình mới được tạo.
+
+Trong số các trường dữ liệu này có rất nhiều các thông tin quan trọng trong quá trình giám sát như:
+- **ProcessId:** Id của tiến trình được tạo ra
+- **Image:** file thực thi để chạy tiến trình
+- **CommandLine:** cho biết các câu lệnh kèm tham số, tùy chọn được dùng để chạy tiến trình.
+- **User:** tài khoản người dùng chạy tiến trình
+- **ParentProcessId, ParentImage và ParentCommandLine:** cho biết các thông tin về tiến trình cha của tiến trình hiện tại.
+- ***Đặc biệt ProcessGUID:*** là giá trị định danh duy nhất của tiến trình trong môi trường có Domain để giúp việc giám sát và phân tích sự kiện dễ hơn tránh trùng lặp.
+
+<img width="752" height="422" alt="image" src="https://github.com/user-attachments/assets/4ce18ef2-f2f8-4fde-a9f6-40f8a8846e05" />
+
 
 
 ## Event ID 2: FileCreateTime
