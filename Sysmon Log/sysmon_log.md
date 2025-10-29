@@ -7,7 +7,7 @@ Sysmon là một công cụ trong bộ công cụ Sysinternal của do Microsoft
 
 ## Event ID 1: ProcessCreate
 
-Cung cấp thông tin về các tiến trình mới được tạo.
+**Process creation:** Cung cấp thông tin về các tiến trình mới được tạo.
 
 Trong số các trường dữ liệu này có rất nhiều các thông tin quan trọng trong quá trình giám sát như:
 - **ProcessId:** Id của tiến trình được tạo ra
@@ -22,7 +22,30 @@ Trong số các trường dữ liệu này có rất nhiều các thông tin qua
 
 
 ## Event ID 2: FileCreateTime
+
+**A process changed a file creation time:** ghi nhận một tiến trình thực hiện thay đổi thời gian tạo một file trên thiết bị.
+
+Trên thực tế các kẻ tấn công có thể thay đổi thời gian tạo file để làm rối quá trình điều tra, sự kiện này sẽ ghi nhận thời gian tạo file thực tế đã bị thay đổi trước đó thông qua trường dữ liệu “PreviousCreationUtcTime”.
+
+Case: gây rối quá trình điều tra. VD:
+- Trong thư mục quản trị của 1 web app, có các file cấu hình, xử lí.
+- Attacker có quyền truy cập, sửa nội dung, thực thi các file này.
+- Chúng sẽ sửa nội dung, chèn vào các payload độc hại và thực thi.
+- Tuy nhiên, khi thực thi sẽ ghi lại log, cập nhật lại time tạo, chạy, biên dịch của file.<br>
+=> Attacker phải sửa time về khoảng hợp lí, khoảng mà các file khác cũng đang có. Kiểu giữa 1 đống file có time chạy lần cuối từ 2022 mà có 1 cái file có time chạy là mới hôm qua (2025) thì kiểu gì cũng bị admin nghi ngờ.
+
+<img width="752" height="193" alt="image" src="https://github.com/user-attachments/assets/2180494b-645a-4d58-93f8-8b5561fd5ed3" />
+
+
+
 ## Event ID 3: NetworkConnect		
+
+**Network connection:** ghi nhận một kết nối TCP/UDP, cung cấp các thông tin về process ID, port nguồn/đích, IP nguồn/đích 
+
+
+
+
+
 ## Event ID 4: Sysmon service state change (cannot be filtered)	
 ## Event ID 5: ProcessTerminate	
 ## Event ID 6: DriverLoad		
