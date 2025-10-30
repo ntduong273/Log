@@ -56,3 +56,23 @@ Ngoài /uploads/robots.aspx ra thì còn /uploads/tunnel.aspx cũng đang mở. 
 Có thể attacker chiếm được máy 10.11.121.24 rồi tiến hành recon sang các máy khác nhằm thực hiện phase lateral movements bằng cách sử dụng tool gửi 1 loạt các request với các path phổ biến trong 1 khoảng thời gian rất ngắn (cỡ 1489 gói tin trong 1s thì chắc không phải là người rồi :v), xem cái nào trả về 200 thì gửi tiếp các gói tin POST tới path đó.
 
 Ở đây em thấy thì phần /uploads/tunnel.aspx được tận dụng nhiều nhất, gửi tới đây cỡ khoảng 672 gói tin POST.
+
+
+
+## Quay lại với sysmon log:
+
+Sau khi mà mở cái file log bằng notepad, thì máy 10.11.121.24 (hostname: WEB-APP.blue.lab) kết nối đến máy 10.11.121.25 (hostname: BLUE-COLLECTOR), gọi thằng winlogbeat.exe - agent để thu log máy host windows. 
+
+Tiếp theo đó ghi nhận 1 tiến trình mới được tạo, event ID = 1 chạy command line ipconfig.
+<img width="1188" height="623" alt="image" src="https://github.com/user-attachments/assets/570d764c-13db-43ad-898d-f34572115dcb" />
+
+Gửi truy vấn DNS: Tiến trình mmc.exe (chạy dưới account BLUE\admin.hue) đã thực hiện các truy vấn DNS nội bộ để resolve tên WEB-APP, WEB-APP.blue.lab và nhận về địa chỉ nội bộ 10.11.121.24
+
+<img width="679" height="498" alt="image" src="https://github.com/user-attachments/assets/4e94c322-a3e2-43f7-807f-14d6f5228f8e" />
+
+<img width="677" height="510" alt="image" src="https://github.com/user-attachments/assets/ff1b09e9-d0d3-4be7-98e8-75949eda0b9c" />
+
+Resolve tên WIN-DC.blue.lab ra được địa chỉ IP 10.11.121.21:
+
+<img width="670" height="503" alt="image" src="https://github.com/user-attachments/assets/3e62d421-d926-4dba-9a41-fde4a8983d27" />
+
