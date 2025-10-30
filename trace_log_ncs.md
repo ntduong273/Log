@@ -21,7 +21,7 @@ Kết thúc chuỗi các event xóa log này là một event ID = 1, mở một 
 
 Tiến hành phân tích nội dung log trong file u_ex250711.log này thì nó là log của dịch vụ web IIS được triển khai trên các Windows Server.
 
-<img width="975" height="532" alt="image" src="https://github.com/user-attachments/assets/73e85bb5-f195-4e24-9049-af4fd6bfea89" />
+<img width="1715" height="827" alt="image" src="https://github.com/user-attachments/assets/23022367-525b-47a6-b233-700cb2cc21c5" />
 
 Toàn bộ lưu lượng xảy ra trong khoảng 15h26 -> 18h41 (hơn 3 tiếng) với hơn 37k bản ghi (khá nhiều) đều xuất phát từ 1 src IP duy nhất (10.11.121.24) tới nhiều dst IP (10.11.121.23, 10.11.121.200,…).
 
@@ -30,22 +30,24 @@ Phân tích sơ bộ ban đầu thì:
 
 Ctrl + F tìm theo status code 200 thì có khoảng 684 bản ghi trùng khớp:
 
-<img width="975" height="102" alt="image" src="https://github.com/user-attachments/assets/7078da25-52e4-498d-82bf-b05e586776c1" />
+<img width="1625" height="81" alt="image" src="https://github.com/user-attachments/assets/1b61a54a-4e59-4ec6-986b-a5c65ce2f3cb" />
 
 Đầu tiên là /index.html: maybe default web page của target.
 
-<img width="975" height="68" alt="image" src="https://github.com/user-attachments/assets/45aa7c02-bc62-4709-b235-bad0f896e7aa" />
+<img width="1731" height="145" alt="image" src="https://github.com/user-attachments/assets/43a34fd7-f91e-4839-9ebd-6c1459d1ccd4" />
 
 Tiếp theo là cụm /uploads/robots.aspx. Sau khi thấy request GET trả về 200 thì có POST thử 2 lần lên, cũng nhận status code là 200.
 
-<img width="975" height="54" alt="image" src="https://github.com/user-attachments/assets/4a02e38e-02be-4ee1-862a-23279f1161df" />
-<img width="975" height="51" alt="image" src="https://github.com/user-attachments/assets/e74b5601-a47c-45aa-b1f2-b241352f0146" />
-<img width="975" height="44" alt="image" src="https://github.com/user-attachments/assets/90767dfd-e0b1-4dfb-b320-3d9a81f4e20c" />
-<img width="975" height="49" alt="image" src="https://github.com/user-attachments/assets/f26db340-87d4-4e00-885a-33ce3721941a" />
+<img width="1350" height="75" alt="image" src="https://github.com/user-attachments/assets/592ecea5-c6db-413e-ac54-5a5a9d74b8b3" />
+<img width="1369" height="72" alt="image" src="https://github.com/user-attachments/assets/9e08fd57-ba2f-40d5-8edf-d1e64505d373" />
+<img width="1425" height="64" alt="image" src="https://github.com/user-attachments/assets/233d0afa-292c-4fe0-b10a-a1919fbd61d1" />
+<img width="1454" height="73" alt="image" src="https://github.com/user-attachments/assets/af9e5407-9d60-4777-a144-ede6c7ba4531" />
+
 
 Các phần râu ria khác như /1.aspx, /2.aspx, /test.aspx, /upload.aspx cũng trả về 200.
 
-<img width="975" height="355" alt="image" src="https://github.com/user-attachments/assets/ac46c45a-0ebe-468f-9c72-83948c426e2e" />
+<img width="1715" height="625" alt="image" src="https://github.com/user-attachments/assets/7d16fdbe-7426-43ed-971d-8361785a76b7" />
+
 
 Ngoài /uploads/robots.aspx ra thì còn /uploads/tunnel.aspx cũng đang mở. Attacker tiến hành POST lên dữ liệu.
 
