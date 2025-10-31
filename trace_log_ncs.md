@@ -9,7 +9,10 @@
 
 <img width="1170" height="836" alt="image" src="https://github.com/user-attachments/assets/4b09704b-c1f6-4461-8887-30dd0302001f" />
 
-Ban đầu, tài khoản BLUE.admin.hue liên tục thực hiện các câu lệnh xóa logs cũ bằng công cụ wevtutil.exe với options là "cl". Hành động này sinh ra một loạt các event có sysmon event ID = 1: New process. 
+Ban đầu, tài khoản BLUE.admin.hue liên tục thực hiện các câu lệnh xóa logs cũ bằng công cụ wevtutil.exe với options là "cl". Hành động này sinh ra một loạt các event có sysmon event ID = 1: New process/windows event log id = 1102: Log clear, 4688: Process Creation.
+
+**_=> T1070.001: Indicator Removal: Clear Windows Event Logs_**
+
 <br>
 Kết thúc chuỗi các event xóa log này là một event ID = 1, mở một phần log có đường dẫn là <code>C:\inetpub\logs\LogFiles\W3SVC1\u_ex250711.log</code> trong công cụ notepad.exe.
 
@@ -76,3 +79,17 @@ Resolve tên WIN-DC.blue.lab ra được địa chỉ IP 10.11.121.21:
 
 <img width="670" height="503" alt="image" src="https://github.com/user-attachments/assets/3e62d421-d926-4dba-9a41-fde4a8983d27" />
 
+Đi kèm phía sau là các log event id=10: ProcessAccess, tiến trình <code>C:\Windows\system32\svchost.exe </code> truy cập đến bộ nhớ của <code>C:\Windows\system32\lsass.exe </code> nhưng chỉ với mức quyền là 0x1400 - chỉ cho phép tra cứu thông tin. Nên cũng chưa thể kết luận là hành vi độc hại, lsass dumping hay không, có thể là hoạt động hợp lệ của các tiến trình hệ thống, cần xác thực, giúp giảm việc chờ user đăng nhập.
+
+<img width="1134" height="647" alt="image" src="https://github.com/user-attachments/assets/2ef4658d-939e-4781-8a1b-e89450101fba" />
+
+Đối chiếu với Security trong Windows Event Log:
+
+Ghi nhận nhiều tiến trình:
+- 1: gọi winlogbeat
+- 10: svchost.exe truy cập vào bộ nhớ lsass.exe (0x1400, 0x101001, rundll.exe gọi thì full access)
+- 1: smss.exe
+- 1: CSRSS.Exe
+- 1: WINLOGON.EXE
+- 1: logonui.exe
+- 
