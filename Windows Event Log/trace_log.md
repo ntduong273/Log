@@ -19,6 +19,9 @@ Tuy nhiên log này còn khớp với 1 rule có RuleName là CredAccess - Memdu
 <img width="1194" height="882" alt="image" src="https://github.com/user-attachments/assets/3009726b-498c-4932-ae4e-b1fcc50ec8d4" />
 
 ***=> Tóm lại: Nghi ngờ hành vi tạo 1 file có tên giống với notepad.exe, sau đó thực hiện access process khác nhằm credential access - memory dump nội dung vào file notepad.bin vừa tạo đó.***
+<br>
+- **T1059 Command and Scripting Interpreter:** Chạy cscript.
+- **T1003 Credential Dumping:** Sử dụng 1 script là memdump.vbs, nhằm lấy nội dung tiến trình notepad.exe.
 
 
  
@@ -43,6 +46,7 @@ Tuy nhiên log này còn khớp với 1 rule có RuleName là CredAccess - Memdu
 <img width="1192" height="879" alt="image" src="https://github.com/user-attachments/assets/cb4e88cb-e6e0-4149-9f4f-fd5f929dbe35" />
 
 ***=> Tóm lại: Hành vi Credential Dumping.***
+- **T1003.001 OS Credential Dumping - LSASS Memory:** procdump.exe, taskmgr.exe dumping bộ nhớ của tiến trình lsass.exe vào 2 file lsass.exe_190317_120941.dmp và lsass (2).DMP
 
 
 
@@ -66,6 +70,9 @@ Theo sau event log này là các event log ID = 1 khác đều là tiến trình
 <img width="1190" height="856" alt="image" src="https://github.com/user-attachments/assets/77ff621e-7ea6-4ca7-b9e7-97082e8af68a" />
 
 ***=> Tóm lại: Hành vi T1059.001: Command and Scripting Interpreter - Powershell trong phase Execution có thể kết hợp các techni đánh cắp credential infor trong các phase Credential Access, Discovery,...***
+<br>
+- **T1059.001: Command and Scripting Interpreter - Powershell:** Lợi dụng w3wp.exe để gọi powershell.exe chạy script khai thác.
+- **T1555.003: Credentials from Password Stores: Credentials from Web Browsers** powershell.exe thực hiện chạy file appcmd.exe trên IIS nhằm khai thác username, password.
 
 
 
@@ -93,7 +100,7 @@ Theo sau event log này là các event log ID = 1 khác đều là tiến trình
 Theo sau đó là các log có Event ID = 1 là new process, tiến trình cha là services.exe mở tiến trình con là cmd.exe để chạy command line kia, cmd.exe này lại gọi tiếp powershell.exe để thực thi tiếp command line.
 
 **Event ID 10 – ProcessAccess** powershell.exe này truy cập sâu vào tiến trình powershell.exe khác với quyền 0x1fffff (Full access) <br>
-=> Mục đích: ??? leo thang đặc quyền ???
+=> Mục đích: ??? leo thang đặc quyền ??? 
 
 <img width="1177" height="641" alt="image" src="https://github.com/user-attachments/assets/0806d03d-8fb6-489a-8053-db37d989fadf" />
 
@@ -117,8 +124,13 @@ Cuối cùng là lại là 1 log event ID = 3, src IP, dstIP tương tự tuy nh
 Khác nhau giữa 2 log:
 - Image: full path tới tiến trình thực hiện kết nối mạng. *Cái trước là của System, cái này là của powershell.exe*
 - Initiated: Cho biết ai khởi tạo kết nối mạng. *Trước đó System là false, giờ powershell.exe là true*
+- Ngoài ra thì ProcessId là 2484 - tiến trình powershell mà bị 1 tiến trình powershell khác truy cập vào với full access.
 
 ***=> Kết luận: có khả năng là hành vi Lateral Movement giữa các máy trong hệ thống, lợi dụng tiến trình powershell.exe, chạy scripts, leo thang đặc quyền nhằm có quyền tạo kết nối***
+<br>
+- **T1059.001: Command and Scripting Interpreter - Powershell:** Chạy powershell.exe.
+- **T1059.003: Command and Scripting Interpreter - Windows Command Shell:** Chạy cmd.exe.
+- **T1112: Modify Registry:** Sửa ImagePath: thành command line đã được obfuscated có sử dụng powershell.exe.
 
 
 
@@ -133,6 +145,8 @@ Khác nhau giữa 2 log:
 Điểm đáng chú ý nhất là Command Line, trông giống như bị obfuscated. <br>
 Mặc dù không hiểu được ý nghĩa, nhưng nếu khả nghi thì cứ nên báo cho Tier 2 cho chắc =)))) vì nếu câu lệnh bình thường, chả ai obfuscated làm gì<br>
 Từ đó check thêm các log trước và sau log này để có thêm thông tin => đưa ra kết luận chính xác hơn. 
+
+- **T1059.001 Command and Scripting Interpreter: PowerShell**
 
 
 
@@ -159,6 +173,8 @@ Xem xét kĩ trường imagepath, chatgpt thì đây khả năng là hành vi:
 - Chạy PowerShell để đọc trường DisplayName của mỗi service segxxx đó và append đoạn đấy vào file tmp_payload.txt.
 - Dĩ nhiên các service này là không hợp lệ nên chẳng thể nào chạy thành công được.
 - Miễn sao chạy hết 245 lần thì tmp_payload.txt này đã có đầy đủ nội dung, chắc là nhằm lẩn trốn, tránh các tools def phát hiện hành vi mà vẫn tải dữ liệu qua lại được.
+<br>
+- **T1059.001 Command and Scripting Interpreter: PowerShell**
 
 
 
@@ -186,3 +202,6 @@ Bước cuối là có kết nối mạng (LogonType 3) được mở tới máy
 
 
 => Trông giống như hành vi lateral movement, khi attacker cố gắng đăng nhập tới các targetusername khác nhau rồi khi đã chạm tới IEUser, đủ khả năng thì sẽ tạo kết nối mạng sang các máy khác trong LAN.
+
+- **T1078 Valid Accounts:** attacker cố gắng tìm tới username hợp lệ để tiến hành kết nối mạng sang các máy khác.
+- **T1021 — Remote Services (Lateral Movement):** Khi đã có quyền trên host, attacker mở kết nối tới các máy khác.
