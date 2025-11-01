@@ -60,7 +60,7 @@ Có thể attacker chiếm được máy 10.11.121.24 rồi tiến hành recon s
 
 Ở đây em thấy thì phần /uploads/tunnel.aspx được tận dụng nhiều nhất, gửi tới đây cỡ khoảng 672 gói tin POST.
 
-
+**=> T1595: Active Scanning**
 
 ## Quay lại với sysmon log:
 
