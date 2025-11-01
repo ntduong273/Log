@@ -60,7 +60,7 @@ Có thể attacker chiếm được máy 10.11.121.24 rồi tiến hành recon s
 
 Ở đây em thấy thì phần /uploads/tunnel.aspx được tận dụng nhiều nhất, gửi tới đây cỡ khoảng 672 gói tin POST.
 
-**=> T1595: Active Scanning**
+**_=> T1595: Active Scanning_**
 
 ## Quay lại với sysmon log:
 
@@ -85,11 +85,64 @@ Resolve tên WIN-DC.blue.lab ra được địa chỉ IP 10.11.121.21:
 
 Đối chiếu với Security trong Windows Event Log:
 
-Ghi nhận nhiều tiến trình:
-- 1: gọi winlogbeat
-- 10: svchost.exe truy cập vào bộ nhớ lsass.exe (0x1400, 0x101001, rundll.exe gọi thì full access)
-- 1: smss.exe
-- 1: CSRSS.Exe
-- 1: WINLOGON.EXE
-- 1: logonui.exe
-- 
+Sau khi thực hiện clear log, mở file u_ex250711.log thì 1 tiến trình svchost.exe tạo 1 tiến trình mới sử dụng cmd.exe để chạy ClipUp.bat.
+
+<img width="732" height="614" alt="image" src="https://github.com/user-attachments/assets/83c01ac7-7167-4191-8d42-81c9508a7d18" />
+
+Sau đó thì gọi đến các tiến trình mới như: conhost.exe, ipconfig, dllhost.exe, mmc.exe, WmiPrvSE.exe (cả domain: WEB-APP$ và local: LOCAL SERVICE).
+Thằng WmiPrvSE.exe của WEB-APP$ này lại tiếp tục cố truy cập hoặc chiếm quyền sở hữu một đối tượng hệ thống (LOADPERF_MUTEX) trong kernel namespace. (PrivilegeList SeTakeOwnershipPrivilege).
+
+
+<img width="745" height="549" alt="image" src="https://github.com/user-attachments/assets/c69b3622-fbfb-4788-a57d-f8695011807c" />
+
+ 4673: “A privileged service was called” – Một tiến trình gọi dịch vụ đặc quyền thuộc Local Security Authority (LSA).
+lsass.exe đang thực thi lời gọi LsaRegisterLogonProcess() với quyền SeTcbPrivilege (Quyền này cho phép tiến trình đăng ký như một phần của Hệ điều hành, tức có thể xác thực người dùng hoặc can thiệp vào quá trình đăng nhập). Tài khoản thực hiện WEB-APP$ (thành viên trong domain) đang tương tác hợp lệ với LSA, có thể là khi một dịch vụ hệ thống hoặc ứng dụng web domain-based gọi đến LSA để xác thực.
+
+<img width="763" height="475" alt="image" src="https://github.com/user-attachments/assets/dc59942f-6905-48c5-acad-22b2e2d8bf67" />
+
+Tiếp theo, windows event log ghi nhận các tiến trình w3wp.exe chạy command line: ipconfig, net user, net localgroup administrator, net netstat -ano, tasklist, schtasks, ...
+
+<img width="885" height="599" alt="image" src="https://github.com/user-attachments/assets/54af60de-0e82-4f6d-a68e-8a34a4a3bdbd" />
+<img width="887" height="604" alt="image" src="https://github.com/user-attachments/assets/e6ab6274-0fe5-44c2-b508-c2417f508845" />
+<img width="892" height="602" alt="image" src="https://github.com/user-attachments/assets/5d26fb9c-1138-47a3-8497-8393c8d33e17" />
+<img width="894" height="604" alt="image" src="https://github.com/user-attachments/assets/6f468abd-1b6a-45ea-bf47-02508e9d561a" />
+<img width="892" height="605" alt="image" src="https://github.com/user-attachments/assets/78cd5c12-65f6-4bc2-aad6-a05900c95d97" />
+<img width="887" height="604" alt="image" src="https://github.com/user-attachments/assets/7689d375-2f1f-4100-9ad5-66a1874a1e22" />
+<img width="1007" height="607" alt="image" src="https://github.com/user-attachments/assets/590400d2-4f4d-459e-b0e7-dfc33c71548d" />
+
+w3wp.exe dùng powershell để kết nối, download string gì đó ở http://10.11.121.23:9999/mini-reverse.ps1 vào thằng clipup.bat.
+
+<img width="968" height="602" alt="image" src="https://github.com/user-attachments/assets/4b15c802-04f6-46e1-9ae8-02b20469d5d4" />
+
+Dùng rundll32.exe, dump gì đó vào ls.tmp
+
+<img width="919" height="601" alt="image" src="https://github.com/user-attachments/assets/95cb638f-1e79-425a-93ef-f6457f9f51d0" />
+
+w3wp.exe chạy csc.exe - trình biên dịch C# của .NET Framework (C# Compiler) không rõ lý do.
+
+<img width="1080" height="604" alt="image" src="https://github.com/user-attachments/assets/2bc8963c-186f-4527-b645-56434acd64b9" />
+
+
+<img width="1205" height="519" alt="image" src="https://github.com/user-attachments/assets/5c27537a-61da-48a6-9fb9-4202b1822e41" />
+
+Thực hiện đăng nhập với đặc quyền cao.
+
+
+<img width="648" height="620" alt="image" src="https://github.com/user-attachments/assets/12c5dd4d-c3c5-4f73-9fd0-56709193e46c" />
+
+
+Logon vào 10.11.31.200
+
+
+
+**=> Tóm lại: Theo như em thấy các hành vi này đều chưa critial cho lắm, nhưng vì được thực hiện ở các khoảng thời gian muộn (từ nửa đêm tới sáng) với các hành vi:**
+- **T1070.001: Indicator Removal: Clear Windows Event Logs:** Xóa log
+- **T1595: Active Scanning:** Quét mạng tới các máy nội bộ, GET, POST.
+- **T1059.001: Command and Scripting Interpreter: Powershell:** Chạy powershell để thực thi câu lệnh
+- Thực hiện đăng nhập với đặc quyền cao
+- Dùng rundll32.exe, dump gì đó vào ls.tmp
+- w3wp.exe chạy csc.exe - trình biên dịch C# của .NET Framework (C# Compiler) không rõ lý do.
+
+
+
+
