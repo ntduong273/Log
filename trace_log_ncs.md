@@ -110,7 +110,7 @@ Tiếp theo, windows event log ghi nhận các tiến trình w3wp.exe chạy com
 <img width="887" height="604" alt="image" src="https://github.com/user-attachments/assets/7689d375-2f1f-4100-9ad5-66a1874a1e22" />
 <img width="1007" height="607" alt="image" src="https://github.com/user-attachments/assets/590400d2-4f4d-459e-b0e7-dfc33c71548d" />
 
-w3wp.exe dùng powershell để kết nối, download string gì đó ở http://10.11.121.23:9999/mini-reverse.ps1 vào thằng clipup.bat.
+w3wp.exe dùng powershell để kết nối, download string, script gì đó ở http://10.11.121.23:9999/mini-reverse.ps1 để ghi vào thằng clipup.bat. Rất có khả năng đây là reverse shell / downloader.
 
 <img width="968" height="602" alt="image" src="https://github.com/user-attachments/assets/4b15c802-04f6-46e1-9ae8-02b20469d5d4" />
 
@@ -118,7 +118,7 @@ Dùng rundll32.exe, dump gì đó vào ls.tmp
 
 <img width="919" height="601" alt="image" src="https://github.com/user-attachments/assets/95cb638f-1e79-425a-93ef-f6457f9f51d0" />
 
-w3wp.exe chạy csc.exe - trình biên dịch C# của .NET Framework (C# Compiler) không rõ lý do.
+w3wp.exe chạy csc.exe - trình biên dịch C# của .NET Framework (C# Compiler) không rõ lý do. Có thể upload source C# hoặc webshell độc hại và lợi dụng cơ chế biên dịch động để thực thi mã chẳng hạn.
 
 <img width="1080" height="604" alt="image" src="https://github.com/user-attachments/assets/2bc8963c-186f-4527-b645-56434acd64b9" />
 
